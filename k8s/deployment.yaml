@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bjj-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bjj-api
+  template:
+    metadata:
+      labels:
+        app: bjj-api
+    spec:
+      serviceAccountName: bjj-api
+      containers:
+      - name: bjj-api
+        image: YOUR_IMAGE ####
+        ports:
+        - containerPort: 80
+        env:
+        - name: DB_HOST
+          value: YOUR_RDS_ENDPOINT
+        - name: SECRET_NAME
+          value: bjj-db-secret
+        - name: AWS_REGION
+          value: us-east-1
