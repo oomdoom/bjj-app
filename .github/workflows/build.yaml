@@ -1,0 +1,45 @@
+name: Build and Push to ECR
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        id: meta
+        run: echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPO: ${{ secrets.ECR_REPO }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          docker build -t $REGISTRY/$REPO:$TAG ./app
+          docker push $REGISTRY/$REPO:$TAG
+          # also tag as latest
+          docker tag $REGISTRY/$REPO:$TAG $REGISTRY/$REPO:latest
+          docker push $REGISTRY/$REPO:latest

@@ -1,0 +1,53 @@
+name: Deploy to EKS
+
+on:
+  workflow_run:
+    workflows: ["Build and Push to ECR"]
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image URI
+        id: image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPO: ${{ secrets.ECR_REPO }}
+        run: echo "uri=$REGISTRY/$REPO:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --name ${{ secrets.EKS_CLUSTER_NAME }} \
+            --region us-east-1
+
+      - name: Apply K8s manifests
+        env:
+          IMAGE_URI: ${{ steps.image.outputs.uri }}
+          RDS_ENDPOINT: ${{ secrets.RDS_ENDPOINT }}
+        run: |
+          # Substitute placeholders before applying
+          sed -i "s|YOUR_IMAGE|$IMAGE_URI|g" k8s/deployment.yaml
+          sed -i "s|YOUR_RDS_ENDPOINT|$RDS_ENDPOINT|g" k8s/deployment.yaml
+          kubectl apply -f k8s/

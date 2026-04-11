@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bjj-api
+  namespace: bjj-app
 spec:
   replicas: 1
   selector:
@@ -12,16 +13,30 @@ spec:
       labels:
         app: bjj-api
     spec:
-      serviceAccountName: bjj-api
+      serviceAccountName: bjj-api-sa
       containers:
       - name: bjj-api
-        image: YOUR_IMAGE ####
+        image: YOUR_IMAGE
         ports:
         - containerPort: 80
         env:
         - name: DB_HOST
           value: YOUR_RDS_ENDPOINT
+        - name: DB_NAME
+          value: bjj
         - name: SECRET_NAME
           value: bjj-db-secret
         - name: AWS_REGION
           value: us-east-1
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 10
