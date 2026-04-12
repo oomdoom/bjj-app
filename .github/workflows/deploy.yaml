@@ -36,6 +36,9 @@ jobs:
           REPO: ${{ secrets.ECR_REPO }}
         run: echo "uri=$REGISTRY/$REPO:${{ github.sha }}" >> $GITHUB_OUTPUT
 
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig \
