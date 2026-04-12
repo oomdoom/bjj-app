@@ -44,10 +44,9 @@ jobs:
 
       - name: Apply K8s manifests
         env:
-          IMAGE_URI: ${{ steps.image.outputs.uri }}
-          RDS_ENDPOINT: ${{ secrets.RDS_ENDPOINT }}
+            IMAGE_URI: ${{ steps.image.outputs.uri }}
+            RDS_ENDPOINT: ${{ secrets.RDS_ENDPOINT }}
         run: |
-          # Substitute placeholders before applying
-          sed -i "s|YOUR_IMAGE|$IMAGE_URI|g" k8s/deployment.yaml
-          sed -i "s|YOUR_RDS_ENDPOINT|$RDS_ENDPOINT|g" k8s/deployment.yaml
-          kubectl apply -f k8s/
+            sed -i "s|YOUR_IMAGE|$IMAGE_URI|g" k8s/deployment.yaml
+            sed -i "s|YOUR_RDS_ENDPOINT|$RDS_ENDPOINT|g" k8s/deployment.yaml
+            kubectl apply -f k8s/
