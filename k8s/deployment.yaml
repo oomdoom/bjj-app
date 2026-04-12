@@ -25,7 +25,7 @@ spec:
         - name: DB_NAME
           value: bjj
         - name: SECRET_NAME
-          value: bjj-db-secret
+          value: bjj-db-secret-v2
         - name: AWS_REGION
           value: us-east-1
         readinessProbe:
