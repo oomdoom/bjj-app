@@ -11,7 +11,7 @@ data:
         - system:bootstrappers
         - system:nodes
   mapUsers: |
-    - userarn: arn:aws:iam::380847574744:user/bjj-app-ci
+    - userarn: arn:aws:iam::380847574744:user/app-ecr
       username: bjj-app-ci
       groups:
         - system:masters
