@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 import logging
 import os
 import psycopg2
@@ -7,6 +8,10 @@ import boto3
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
+
+# Wire up Prometheus metrics — exposes /metrics in Prometheus format
+# Tracks request count, latency, and error rates per endpoint automatically
+Instrumentator().instrument(app).expose(app)
 
 def get_secret():
     secret_name = os.getenv("SECRET_NAME")
@@ -67,7 +72,3 @@ def get_techniques():
     cur.close()
     conn.close()
     return rows
-
-@app.get("/metrics")
-def metrics():
-    return {"status": "ok"}
